@@ -23,10 +23,11 @@ with open("model.pkl", "rb") as f:
 
 # Dictionnaire pour décoder la classe prédite
 labels_map = {
-    0: "Mauvaise qualité",
-    1: "Bonne qualité",
-    2: "Excellente qualité"
+    1: "Qualité faible",
+    3: "Bonne qualité",
+    7: "Meilleure qualité"
 }
+
 
 # Schema Pydantic
 class OliveFeatures(BaseModel):
