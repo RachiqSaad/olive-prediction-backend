@@ -8,13 +8,12 @@ from fastapi.middleware.cors import CORSMiddleware
 app = FastAPI()
 
 # Autoriser CORS pour le front
-origins = ["http://localhost:3000"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],  # Autorise tout (à restreindre si besoin)
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["*"],  # IMPORTANT pour accepter OPTIONS
+    allow_headers=["*"],  # IMPORTANT pour accepter Content-Type
 )
 
 # Charger le modèle
