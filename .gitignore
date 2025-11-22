@@ -1,0 +1,14 @@
+# Environnements Python
+env/
+venv/
+
+# Fichiers Python compilés
+__pycache__/
+*.pyc
+
+# IDE
+.vscode/
+.idea/
+
+# Autres
+.DS_Store

@@ -1,15 +1,14 @@
 from fastapi import FastAPI
-from schemas import OliveFeatures
+from pydantic import BaseModel
+from typing import List
 import pickle
 import numpy as np
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-origins = [
-    "http://localhost:3000",
-]
-
+# Autoriser CORS pour le front
+origins = ["http://localhost:3000"]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -18,47 +17,61 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-
-# Charger le modèle .pkl
+# Charger le modèle
 with open("model.pkl", "rb") as f:
     model = pickle.load(f)
-# 🔹 Dictionnaire pour décoder la classe numérique du modèle
+
+# Dictionnaire pour décoder la classe prédite
 labels_map = {
     0: "Mauvaise qualité",
     1: "Bonne qualité",
     2: "Excellente qualité"
 }
-# 🔹 Endpoint /predict
+
+# Schema Pydantic
+class OliveFeatures(BaseModel):
+    sterols: float
+    triglycerides: float
+    phenols: float
+    acidite: float
+    alcools_triterpeniques: float
+    derives_tocopherol: float
+    acides_gras: float
+    densite_huile: float
+    ph: float
+    vitamine_e: float
+    polyphenols: float
+
+# Route test
+@app.get("/")
+def root():
+    return {"message": "API FastAPI fonctionne !"}
+
+# Endpoint pour prédiction multiple
 @app.post("/predict")
-def predict(data: OliveFeatures):
-    # Encoder la variable catégorielle "type"
-    type_map = {"Vert": 0, "Brun": -1}
-    type_encoded = type_map.get(data.type, 1)
+def predict(data: List[OliveFeatures]):
+    results = []
 
-    # Créer le vecteur de features
-    features = np.array([[
-        type_encoded,
-        data.sterols,
-        data.triglycerides,
-        data.phenols,
-        data.acidite,
-        data.alcools_triterpeniques,
-        data.derives_tocopherol,
-        data.acides_gras,
-        data.densite_huile,
-        data.ph,
-        data.vitamine_e,
-        data.polyphenols
-    ]])
+    for d in data:
+        features = np.array([[ 
+            d.sterols,
+            d.triglycerides,
+            d.phenols,
+            d.acidite,
+            d.alcools_triterpeniques,
+            d.derives_tocopherol,
+            d.acides_gras,
+            d.densite_huile,
+            d.ph,
+            d.vitamine_e,
+            d.polyphenols
+        ]])
 
-    # Prédiction
-    prediction = model.predict(features)[0]
+        prediction = model.predict(features)[0]
+        qualite_str = labels_map.get(int(prediction), "Qualité inconnue")
+        results.append({
+            "qualite_predite": qualite_str,
+            "code": int(prediction)
+        })
 
-    # Conversion en texte
-    qualite_str = labels_map.get(int(prediction), "Qualité inconnue")
-
-    return {
-        "qualite_predite": qualite_str,
-        "code": int(prediction)
-    }
+    return {"predictions": results}
