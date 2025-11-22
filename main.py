@@ -7,13 +7,12 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-# Autoriser CORS pour le front
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Autorise tout (à restreindre si besoin)
+    allow_origins=["https://olive-prediction-frontend.vercel.app/"],  # Tu peux mettre ["https://ton-site.vercel.app"] après
     allow_credentials=True,
-    allow_methods=["*"],  # IMPORTANT pour accepter OPTIONS
-    allow_headers=["*"],  # IMPORTANT pour accepter Content-Type
+    allow_methods=["*"],  # <-- IMPORTANT POUR OPTIONS
+    allow_headers=["*"],  # <-- IMPORTANT POUR OPTIONS
 )
 
 # Charger le modèle
