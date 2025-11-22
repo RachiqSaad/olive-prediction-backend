@@ -7,27 +7,32 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
+# ----- CORS FIX -----
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://olive-prediction-frontend.vercel.app/"],  # Tu peux mettre ["https://ton-site.vercel.app"] après
+    allow_origins=[
+        "https://olive-prediction-frontend.vercel.app"
+    ],  # ❗ PAS DE / À LA FIN
     allow_credentials=True,
-    allow_methods=["*"],  # <-- IMPORTANT POUR OPTIONS
-    allow_headers=["*"],  # <-- IMPORTANT POUR OPTIONS
+    allow_methods=["*"],   # obligatoire pour OPTIONS
+    allow_headers=["*"],   # obligatoire pour OPTIONS
 )
 
-# Charger le modèle
+# ----- OPTIONS FIX -----
+@app.options("/predict")
+async def options_handler():
+    return {}
+
+# Charger modèle
 with open("model.pkl", "rb") as f:
     model = pickle.load(f)
 
-# Dictionnaire pour décoder la classe prédite
 labels_map = {
     1: "Qualité faible",
     3: "Bonne qualité",
     7: "Meilleure qualité"
 }
 
-
-# Schema Pydantic
 class OliveFeatures(BaseModel):
     sterols: float
     triglycerides: float
@@ -41,18 +46,18 @@ class OliveFeatures(BaseModel):
     vitamine_e: float
     polyphenols: float
 
-# Route test
+
 @app.get("/")
 def root():
     return {"message": "API FastAPI fonctionne !"}
 
-# Endpoint pour prédiction multiple
+
 @app.post("/predict")
 def predict(data: List[OliveFeatures]):
     results = []
 
     for d in data:
-        features = np.array([[ 
+        features = np.array([[
             d.sterols,
             d.triglycerides,
             d.phenols,
@@ -68,6 +73,7 @@ def predict(data: List[OliveFeatures]):
 
         prediction = model.predict(features)[0]
         qualite_str = labels_map.get(int(prediction), "Qualité inconnue")
+
         results.append({
             "qualite_predite": qualite_str,
             "code": int(prediction)
